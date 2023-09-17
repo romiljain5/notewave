@@ -1,0 +1,72 @@
+
+Create note taking app like notion on website just to enhance ur skills
+use bun
+Use mongodb 
+Use redux for state management
+use redis for caching purposes
+use antd or ant design for UI Library with react
+build react app with vite and bun for hot reloading
+use Prosemirror for Test Editor - https://prosemirror.net/examples/lint/
+
+
+
+### Points to note
+Creating a text editor like Notion is a complex and ambitious project that requires a good understanding of web development, including frontend and backend technologies. Below is a high-level overview of the steps and technologies involved in building a text editor similar to Notion:
+
+1. **Frontend Development:**
+
+   - **React:** Use React.js as the frontend framework. It allows you to build interactive and dynamic user interfaces efficiently.
+   - **State Management:** Implement a state management solution like Redux or Mobx to manage the application's state.
+   - **Rich Text Editing:** To create a rich text editor, you can use libraries like Draft.js, Slate.js, or ProseMirror. These libraries provide the foundation for handling text formatting, mentions, links, and more.
+   - **Drag-and-Drop:** Implement drag-and-drop functionality for rearranging and organizing content within your editor. Libraries like `react-beautiful-dnd` can be helpful.
+   - **Responsive Design:** Ensure that your editor is responsive and works well on both desktop and mobile devices.
+   - **Real-time Collaboration:** If you want to support real-time collaboration, consider using technologies like WebSockets or a service like Firebase for handling real-time updates.
+
+2. **Backend Development:**
+
+   - **Node.js:** Use Node.js as the backend runtime environment. It's popular for building scalable and efficient server applications.
+   - **Database:** Choose a database system to store user data, documents, and collaborative changes. MongoDB, PostgreSQL, or a NoSQL database may be suitable, depending on your requirements.
+   - **Authentication:** Implement user authentication and authorization to secure user data. You can use libraries like Passport.js or Firebase Authentication.
+   - **APIs:** Create RESTful or GraphQL APIs to handle requests from the frontend. These APIs should handle actions like creating, updating, and retrieving documents.
+   - **Real-time Communication:** For real-time collaboration features, use technologies like WebSockets (e.g., Socket.io) or implement a publish-subscribe system.
+
+3. **Data Storage and Versioning:**
+
+   - Implement a data structure to store and version documents. Notion, for example, uses a block-based data model.
+   - Implement version control to track changes and revisions of documents.
+
+4. **User Interface (UI):**
+
+   - Design a clean and user-friendly UI. You can use design libraries like Ant Design, Material-UI, or create a custom design.
+   - Implement features like inline editing, formatting options, drag-and-drop interactions, and content blocks.
+
+5. **Collaboration and Permissions:**
+
+   - Build a collaboration system that allows multiple users to edit the same document simultaneously.
+   - Implement access control to define user permissions, such as read-only, edit, or share.
+
+6. **Search and Organization:**
+
+   - Implement search functionality to quickly find documents and content within documents.
+   - Create a system for organizing documents using folders, tags, or categories.
+
+7. **Testing and Quality Assurance:**
+
+   - Write unit tests and perform end-to-end testing to ensure the stability and reliability of your application.
+
+8. **Deployment:**
+
+   - Deploy your frontend and backend to a hosting provider like AWS, Heroku, Netlify, or Vercel.
+   - Set up domain and SSL certificates for secure access.
+
+9. **Scalability and Performance:**
+
+   - Optimize your application for performance, especially if you anticipate a large user base.
+   - Implement caching strategies, load balancing, and other scalability measures.
+
+10. **Continuous Development:**
+
+    - Keep your application up to date with the latest technologies and security patches.
+    - Listen to user feedback and make improvements accordingly.
+
+Building a Notion-like text editor is a substantial project, and it may take a team of developers considerable time to complete. Consider starting with a smaller project to gain experience in web development and then gradually work your way up to more complex applications.
