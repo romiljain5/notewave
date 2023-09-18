@@ -312,13 +312,14 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
                     margin: "10px",
                     borderRadius: "10px",
                     // padding: "24px 0 24px 0",
+                    padding: "24px 0 0 0"
                   }}
                 >
                   {/* style={{ textDecoration: "line-through" }} */}
 
                     <Meta
                       style={{
-                        padding: "24px 0",
+                        padding: "24px",
                         fontSize: "16px",
                         display: "flex",
                         flexDirection: "column",
@@ -338,7 +339,7 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
                     <Col span={8} style={{ textAlign: "center" }}>
                       <Button
                         type="primary"
-                        style={{ backgroundColor: "#52c41a" }}
+                        style={{ backgroundColor: "#52c41a", width: "100%", height: "100%", borderRadius: "0 0 0 10px"}}
                         icon={<CheckOutlined />}
                         size={"large"}
                         onClick={(e) => markTaskCompleted(task)}
@@ -347,7 +348,7 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
                     <Col span={8} style={{ textAlign: "center" }}>
                       <Button
                         type="primary"
-                        style={{ margin: "0 10px" }}
+                        style={{ width: "100%", height: "100%", borderRadius:'0' }}
                         icon={<EditFilled />}
                         size={"large"}
                         onClick={(e) => showModal(task)}
@@ -358,6 +359,7 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
                         onClick={(e) => deleteTask(e, task)}
                         type="primary"
                         icon={<DeleteOutlined />}
+                        style={{width: "100%", height: "100%", borderRadius: "0 0 10px 0"}}
                         size={"large"}
                         danger
                       />
@@ -380,6 +382,7 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
                     margin: "10px",
                     borderRadius: "10px",
                     // padding: "24px 0 24px 0",
+                    padding: "24px 0 0 0"
                   }}
                 >
                   {/* style={{ textDecoration: "line-through" }} */}
@@ -387,7 +390,7 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
                   {(
                     <Meta
                       style={{
-                        padding: "24px 0",
+                        padding: "24px",
                         fontSize: "16px",
                         textDecoration: "line-through",
                         display: "flex",
@@ -395,6 +398,7 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
                         alignItems: "center", // Center horizontally
                         justifyContent: "center", // Center vertically
                         textAlign: "center", // Center text
+                        color: "red"
                       }}
                       // avatar={
                       //   <Avatar src="https://xsgames.co/randomusers/avatar.php?g=pixel&key=1" />
@@ -411,13 +415,13 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
                         icon={<UndoOutlined />}
                         size={"large"}
                         onClick={(e) => markTaskUnCompleted(task)}
-                        style={{backgroundColor:'#6C757D'}}
+                        style={{backgroundColor:'#6C757D', width: "100%", height: "100%", borderRadius: "0 0 0 10px"}}
                       />
                     </Col>
                     <Col span={8} style={{ textAlign: "center" }}>
                       <Button
                         type="primary"
-                        style={{ margin: "0 10px" }}
+                        style={{ width: "100%", height: "100%", borderRadius: "0" }}
                         icon={<EditFilled />}
                         size={"large"}
                         onClick={(e) => showModal(task)}
@@ -428,6 +432,7 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
                         onClick={(e) => deleteTask(e, task)}
                         type="primary"
                         icon={<DeleteOutlined />}
+                        style={{width: "100%", height: "100%", borderRadius: "0 0 10px 0"}}
                         size={"large"}
                         danger
                       />
