@@ -33,14 +33,20 @@ app.get("/", (req, res) => {
 });
 
 const saveNote = async (title, description, dueDate, completed) => {
-  const data = new Task({
-    title,
-    description,
-    dueDate,
-    completed,
-  });
-  const result = await data.save();
-  console.log(result);
+  try {
+    
+    const data = new Task({
+      title,
+      description,
+      dueDate,
+      completed,
+    });
+    const result = await data.save();
+  
+    console.log(result);
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 app.post("/add-task", (req, res) => {
@@ -48,8 +54,7 @@ app.post("/add-task", (req, res) => {
   if (
     !req.body.title ||
     !req.body.dueDate ||
-    typeof req.body.completed === Boolean ||
-    !req.body.description
+    typeof req.body.completed === Boolean 
   ) {
     res.status(400).send("Please enter a title or a date");
   }
