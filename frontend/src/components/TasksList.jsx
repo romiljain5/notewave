@@ -8,32 +8,46 @@ import {
   Button,
   notification,
   Modal,
+  Input,
+  Card,
+  Row,
+  Col,
+  Typography,
 } from "antd";
-import { DeleteOutlined, EditFilled, CheckOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditFilled, CheckOutlined, UndoOutlined } from "@ant-design/icons";
+import {
+  EditOutlined,
+  EllipsisOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import axios from "axios";
 
+const { TextArea } = Input;
+const { Meta } = Card;
+const {Title} = Typography;
 const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
-  const [dataForModal, setDataForModal] = useState({
-    id: "",
-    title: "",
-    description: "",
-  });
-
+  // const [dataForModal, setDataForModal] = useState({
+  //   id: "",
+  //   title: "",
+  //   description: "",
+  // });
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [id, setId] = useState("");
   // modal
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const showModal = (item) => {
-    setDataForModal({
-      id: item._id,
-      title: item.title,
-      description: item.description,
-    });
+    setId(item._id);
+    setTitle(item.title);
+    setDescription(item.description);
     setIsModalOpen(true);
   };
 
   const handleOk = () => {
+    updateTask();
     setIsModalOpen(false);
   };
 
@@ -99,15 +113,104 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
     }
   };
 
-  //   fetch(`http://localhost:8080/get-all-tasks?token=${import.meta.env.VITE_REACT_APP_TOKEN}`)
-  //     .then((res) => res.json())
-  //     .then((body) => {
-  //       setData([...data, ...body.results]);
-  //       setLoading(false);
-  //     })
-  //     .catch(() => {
-  //       setLoading(false);
-  //     });
+  const markTaskCompleted = async (item) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:8080/update-task?token=${
+          import.meta.env.VITE_REACT_APP_TOKEN
+        }&id=${item._id}`,
+        {
+          completed: true,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      refreshTasks();
+      openNotificationWithIcon(
+        "success",
+        "Task Completed Successfully",
+        "",
+        "bottomRight"
+      );
+    } catch (error) {
+      openNotificationWithIcon(
+        "error",
+        "Error Occured",
+        error.message,
+        "bottomRight"
+      );
+    }
+  };
+
+
+  const markTaskUnCompleted = async (item) => {
+    try {
+      const response = await axios.put(
+        `http://localhost:8080/update-task?token=${
+          import.meta.env.VITE_REACT_APP_TOKEN
+        }&id=${item._id}`,
+        {
+          completed: false,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      refreshTasks();
+      openNotificationWithIcon(
+        "success",
+        "Task Rescheduled",
+        "",
+        "bottomRight"
+      );
+    } catch (error) {
+      openNotificationWithIcon(
+        "error",
+        "Error Occured",
+        error.message,
+        "bottomRight"
+      );
+    }
+  };
+
+  const updateTask = async () => {
+    try {
+      const response = await axios.put(
+        `http://localhost:8080/update-task?token=${
+          import.meta.env.VITE_REACT_APP_TOKEN
+        }&id=${id}`,
+        {
+          title: title,
+          description: description,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log(response.data);
+      refreshTasks();
+      openNotificationWithIcon(
+        "success",
+        "Task Updated Successfully",
+        "",
+        "bottomRight"
+      );
+    } catch (error) {
+      openNotificationWithIcon(
+        "error",
+        "Error Occured",
+        error.message,
+        "bottomRight"
+      );
+    }
+  };
 
   const deleteTask = async (e, task) => {
     console.log("deleteTask", task);
@@ -131,6 +234,13 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
     }
   };
 
+  const truncateText=(text, limit)=> {
+    if (text && text.length > limit) {
+      return text.slice(0, limit) + " ... ";
+    }
+    return text;
+  }
+
   useEffect(() => {
     loadMoreData();
     console.log("Fetched data", data);
@@ -140,14 +250,30 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
       {contextHolder}
 
       <Modal
-        title="Basic Modal"
+        title="Edit Task"
         open={isModalOpen}
         onOk={handleOk}
+        okText={"Save"}
+        cancelText={"Discard"}
+        width={description.length>100?'50%':'30%'}
+        cancelButtonProps={{ style: { color: "red", borderColor: "red" } }}
         onCancel={handleCancel}
       >
-        <p>{dataForModal.title!=="" && dataForModal.title}</p>
-        <p>{dataForModal.description!=="" && dataForModal.description}</p>
-        <p>Some contents...</p>
+        <Input
+          placeholder="Enter task"
+          value={title}
+          size="large"
+          style={{ margin: "10px 0" }}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        <TextArea
+          rows={description.length>100?12:3}
+          size="large"
+          onChange={(e) => setDescription(e.target.value)}
+          value={description}
+          placeholder="Enter task description"
+        />
       </Modal>
       <div
         id="scrollableDiv"
@@ -176,41 +302,141 @@ const TasksList = ({ addTaskLoading, setAddTaskLoading }) => {
           endMessage={<Divider plain>It is all, nothing more 🤐</Divider>}
           scrollableTarget="scrollableDiv"
         >
-          <List
-            dataSource={data}
-            renderItem={(item) => (
-              <List.Item key={item.description}>
-                <List.Item.Meta
-                  //   avatar={<Avatar src={item.picture.large} />}
-                  title={<a href="https://ant.design">{item.title}</a>}
-                  description={item.description}
-                />
-                <div>
-                  {/* when checked move to done state, when delete delete from db */}
-                  <Button
-                    type="primary"
-                    style={{ backgroundColor: "#52c41a" }}
-                    icon={<CheckOutlined />}
-                    size={"large"}
-                  />
-                  <Button
-                    type="primary"
-                    style={{ margin: "0 10px" }}
-                    icon={<EditFilled />}
-                    size={"large"}
-                    onClick={(e) => showModal(item)}
-                  />
-                  <Button
-                    onClick={(e) => deleteTask(e, item)}
-                    type="primary"
-                    icon={<DeleteOutlined />}
-                    size={"large"}
-                    danger
-                  />
-                </div>
-              </List.Item>
-            )}
-          />
+          <Card>
+            {data.map((task) => {
+              return (
+                !task.completed &&
+                <Card.Grid
+                  style={{
+                    width: "40vh",
+                    margin: "10px",
+                    borderRadius: "10px",
+                    // padding: "24px 0 24px 0",
+                  }}
+                >
+                  {/* style={{ textDecoration: "line-through" }} */}
+
+                    <Meta
+                      style={{
+                        padding: "24px 0",
+                        fontSize: "16px",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center", // Center horizontally
+                        justifyContent: "center", // Center vertically
+                        textAlign: "center", // Center text
+                      }}
+                      // avatar={
+                      //   <Avatar src="https://xsgames.co/randomusers/avatar.php?g=pixel&key=1" />
+                      // }
+                      
+                      title={truncateText(task.title, 40)}
+                      description={truncateText(task.description, 100)}
+                    />
+                  
+                  <Row span={24} style={{ width: "100%" }}>
+                    <Col span={8} style={{ textAlign: "center" }}>
+                      <Button
+                        type="primary"
+                        style={{ backgroundColor: "#52c41a" }}
+                        icon={<CheckOutlined />}
+                        size={"large"}
+                        onClick={(e) => markTaskCompleted(task)}
+                      />
+                    </Col>
+                    <Col span={8} style={{ textAlign: "center" }}>
+                      <Button
+                        type="primary"
+                        style={{ margin: "0 10px" }}
+                        icon={<EditFilled />}
+                        size={"large"}
+                        onClick={(e) => showModal(task)}
+                      />
+                    </Col>
+                    <Col span={8} style={{ textAlign: "center" }}>
+                      <Button
+                        onClick={(e) => deleteTask(e, task)}
+                        type="primary"
+                        icon={<DeleteOutlined />}
+                        size={"large"}
+                        danger
+                      />
+                    </Col>
+                  </Row>
+                </Card.Grid>
+              );
+            })}
+          </Card>
+
+
+          <Card>
+             <Title level={3} style={{width:'100%', margin:'20px'}}>Completed Tasks</Title> 
+            {data.map((task) => {
+              return (
+                task.completed &&
+                <Card.Grid
+                  style={{
+                    width: "40vh",
+                    margin: "10px",
+                    borderRadius: "10px",
+                    // padding: "24px 0 24px 0",
+                  }}
+                >
+                  {/* style={{ textDecoration: "line-through" }} */}
+
+                  {(
+                    <Meta
+                      style={{
+                        padding: "24px 0",
+                        fontSize: "16px",
+                        textDecoration: "line-through",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center", // Center horizontally
+                        justifyContent: "center", // Center vertically
+                        textAlign: "center", // Center text
+                      }}
+                      // avatar={
+                      //   <Avatar src="https://xsgames.co/randomusers/avatar.php?g=pixel&key=1" />
+                      // }
+                      title={truncateText(task.title, 40)}
+                      description={truncateText(task.description, 100)}
+                    />
+                  )
+                  }
+                  <Row span={24} style={{ width: "100%" }}>
+                    <Col span={8} style={{ textAlign: "center" }}>
+                      <Button
+                        type="primary"
+                        icon={<UndoOutlined />}
+                        size={"large"}
+                        onClick={(e) => markTaskUnCompleted(task)}
+                        style={{backgroundColor:'#6C757D'}}
+                      />
+                    </Col>
+                    <Col span={8} style={{ textAlign: "center" }}>
+                      <Button
+                        type="primary"
+                        style={{ margin: "0 10px" }}
+                        icon={<EditFilled />}
+                        size={"large"}
+                        onClick={(e) => showModal(task)}
+                      />
+                    </Col>
+                    <Col span={8} style={{ textAlign: "center" }}>
+                      <Button
+                        onClick={(e) => deleteTask(e, task)}
+                        type="primary"
+                        icon={<DeleteOutlined />}
+                        size={"large"}
+                        danger
+                      />
+                    </Col>
+                  </Row>
+                </Card.Grid>
+              );
+            })}
+          </Card>
         </InfiniteScroll>
       </div>
     </>

@@ -1,21 +1,42 @@
 import { React, useEffect, useState } from "react";
-import { Input, Space, Button, notification } from "antd";
+import {
+  Input,
+  Space,
+  Button,
+  Typography,
+  notification,
+  DatePicker,
+  Row,
+  Col,
+} from "antd";
 import TasksList from "./TasksList";
 import axios from "axios";
 
 const { TextArea, Search } = Input;
+const { Title } = Typography;
 const Tasks = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [date, setDate] = useState("")
   const [data, setData] = useState({});
   const [addTaskLoading, setAddTaskLoading] = useState(false);
   const onSubmit = async (value, _e, info) => {
     console.log(value, description);
-    if(title===""){
-      openNotificationWithIcon('error', 'Please enter a task', '', 'bottomRight');
+    if (title === "") {
+      openNotificationWithIcon(
+        "error",
+        "Please enter a task",
+        "",
+        "bottomRight"
+      );
       return;
     }
     await addTask();
+  };
+
+  const onChange = (date, dateString) => {
+    console.log(date, dateString);
+    setDate(dateString);
   };
 
   const [api, contextHolder] = notification.useNotification();
@@ -23,10 +44,10 @@ const Tasks = () => {
     api[type]({
       message: message,
       description,
-      placement
+      placement,
     });
   };
-  
+
   //   useEffect(() => {
   //     const callAPI = async () => {
   //         try {
@@ -49,7 +70,7 @@ const Tasks = () => {
         {
           title: title,
           description: description,
-          dueDate: new Date(),
+          dueDate: date,
           completed: false,
         },
         {
@@ -58,12 +79,24 @@ const Tasks = () => {
           },
         }
       );
-      openNotificationWithIcon('success', 'Note added successfully', '', 'bottomRight');
+      openNotificationWithIcon(
+        "success",
+        "Note added successfully",
+        "",
+        "bottomRight"
+      );
+      setTitle("");
+      setDescription("");
     } catch (error) {
-      openNotificationWithIcon('error', 'Error occurred', error.message, 'bottomRight');
+      openNotificationWithIcon(
+        "error",
+        "Error occurred",
+        error.message,
+        "bottomRight"
+      );
     }
   };
-  
+
   return (
     <div>
       {contextHolder}
@@ -86,6 +119,19 @@ const Tasks = () => {
           value={description}
           placeholder="Enter task description"
         />
+
+        <Row>
+          <Col span={2}>
+            <Title level={4} style={{margin:"20px 10px 20px 0"}}>Due date</Title>
+          </Col>
+          <Col span={21} style={{ float: "left" }}>
+            <DatePicker
+              size="large"
+              onChange={onChange}
+              style={{ margin: "10px 0", width:"30%" }}
+            />
+          </Col>
+        </Row>
       </>
       <div style={{ margin: "10px 0" }}>
         <TasksList

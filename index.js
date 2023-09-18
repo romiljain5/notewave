@@ -75,7 +75,7 @@ app.post("/add-task", (req, res) => {
 
 app.get("/get-all-tasks", async (req, res) => {
   try {
-    const data = await Task.find();
+    const data = await Task.find().sort({ dueDate: -1 });
     res.status(200).send(data);
   } catch (error) {
     res.send(error);
