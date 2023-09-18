@@ -8,7 +8,7 @@ function myMiddleware(req, res, next) {
   console.log("This is my custom middleware.");
   if (
     req.query.token ===
-    "ZhDsBOhgsgxKUYWcykrcmfKckvWvSVVoDuskJlBeViQyQeoOWJJTDXCkDNUrueYl"
+      `${process.env.API_TOKEN_KEY}`
   ) {
     next();
   } else {
@@ -24,7 +24,7 @@ const mongoose = require("mongoose");
 
 mongoose
   .connect(
-    "mongodb+srv://classed:e9VaCY2ytq9tAZUn@cluster0.oqxmv.mongodb.net/notesapp?retryWrites=true&w=majority"
+    `${process.env.MONGO_URI}`
   )
   .then(() => console.log("Connected!"));
 
