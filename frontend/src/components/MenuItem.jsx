@@ -24,6 +24,10 @@ import SettingsModal from "./SettingsModal";
 import TextEditor from "./TextEditor";
 import AllNotes from "./AllNotes";
 import Tasks from "./Tasks";
+import { useDispatch } from "react-redux";
+import { currentNoteId } from "../features/note/noteSlice";
+import { v4 as uuidv4 } from 'uuid';
+import axios from "axios";
 
 const MenuItem = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,6 +42,45 @@ const MenuItem = () => {
   };
   const handleCancel = () => {
     setIsModalOpen(false);
+  };
+
+  // Create Note object
+  const addNote = async (content) => {
+    // console.log("updateTask", Task);
+    try {
+      const getId = uuidv4();
+      const data = await axios.post(
+        `http://localhost:8080/add-note`,
+        {
+          title: "title",
+          emoji: "👍🏼",
+          content: content,
+          intrash: false,
+          id: getId,
+        },
+        {
+          params: {
+            token: import.meta.env.VITE_REACT_APP_TOKEN,
+          },
+        }
+      );
+      dispatch(currentNoteId(getId));
+      console.log("Created new note");
+      // openNotificationWithIcon(
+      //   "success",
+      //   "Note added successfully",
+      //   "",
+      //   "bottomRight"
+      // );
+    } catch (error) {
+      console.log(error);
+      // openNotificationWithIcon(
+      //   "error",
+      //   "Error occurred",
+      //   error.message,
+      //   "bottomRight"
+      // );
+    }
   };
 
   const items = [
@@ -91,7 +134,8 @@ const MenuItem = () => {
     ]),
   ];
 
-  const onClick = (e) => {
+  const dispatch = useDispatch();
+  const onClick = async (e) => {
     console.log("click ", e);
     switch (e.key) {
       case "19":
@@ -101,6 +145,8 @@ const MenuItem = () => {
         setShowEditor(true);
         setShowAllNotes(false);
         setShowTasks(false);
+        //add here
+        await addNote("");
         break;
       case "15":
         setShowAllNotes(true);
@@ -152,7 +198,7 @@ const MenuItem = () => {
               <AllNotes />
             </>
           )}
-          {showTasks && <Tasks/>}
+          {showTasks && <Tasks />}
         </Col>
       </Row>
     </div>
