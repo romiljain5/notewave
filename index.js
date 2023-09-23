@@ -120,7 +120,7 @@ app.listen(port, () => {
 
 app.post("/add-note", (req, res) => {
   console.log(req.body);
-  if (!req.body.title || !req.body.content) {
+  if (!req.body.title && !req.body.content) {
     res.status(400).send("Please fill all details");
   }
   try {

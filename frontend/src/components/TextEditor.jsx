@@ -2,14 +2,15 @@ import React, { useCallback, useState, useEffect } from "react";
 import { WysiwygEditor } from "@remirror/react-editors/wysiwyg";
 import { OnChangeJSON } from "@remirror/react";
 import axios from "axios";
-import { Button } from "antd";
+import { Button, Input, Row, Col } from "antd";
 import { useSelector } from "react-redux";
+import {emojiOptions} from "./EditorUnit";
 
 const STORAGE_KEY = "remirror-editor-content";
 
 const getNote = async (currentNoteId) => {
   try {
-    console.log('currentNoteId', currentNoteId);
+    console.log("currentNoteId", currentNoteId);
     const noteData = await axios.get(
       `http://localhost:8080/get-note?token=${
         import.meta.env.VITE_REACT_APP_TOKEN
@@ -24,8 +25,7 @@ const getNote = async (currentNoteId) => {
   }
 };
 
-
-const updateNote = async (id) => {
+const updateNote = async (id, title, emoji) => {
   try {
     const response = await axios.put(
       `http://localhost:8080/update-note?token=${
@@ -33,6 +33,8 @@ const updateNote = async (id) => {
       }&id=${id}`,
       {
         content: JSON.stringify(localStorage.getItem(STORAGE_KEY)),
+        title: title,
+        emoji: emoji
       },
       {
         headers: {
@@ -48,7 +50,7 @@ const updateNote = async (id) => {
 
 const MyEditor = ({ onChange, initialContent }) => {
   return (
-    <div style={{ padding: 16 }}>
+    <div style={{ padding: "16px 0" }}>
       <WysiwygEditor
         placeholder="Enter text..."
         initialContent={initialContent}
@@ -59,16 +61,30 @@ const MyEditor = ({ onChange, initialContent }) => {
   );
 };
 
+const inputStyle = {
+  fontSize: "60px",
+  border: "none",
+  borderBottom: "0px solid #ccc",
+  outline: "none",
+  cursor: "pointer",
+  margin: "20px 0",
+  caretColor: "transparent",
+  width: '10%'
+};
+
 const TextEditor = () => {
   const [initialContent, setInitialContent] = useState(undefined);
 
   const currentNoteId = useSelector((state) => state?.notes?.noteId);
+  const [title, setTitle] = useState("");
+
+  const [selectedEmoji, setSelectedEmoji] = useState("☘️");
+  const [showDropdown, setShowDropdown] = useState(false);
 
   const fetchData = async () => {
     try {
       const content = await getNote(currentNoteId);
       return content ? JSON.parse(content) : undefined;
-      
     } catch (error) {
       console.error(error);
     }
@@ -76,10 +92,15 @@ const TextEditor = () => {
 
   useEffect(() => {
     fetchData().then((data) => {
-      console.log('fetched data', data)
+      console.log("fetched data", data);
       setInitialContent(data);
     });
   }, [currentNoteId]);
+
+  const handleSelect = (value) => {
+    setSelectedEmoji(value);
+    setShowDropdown(false);
+  };
 
   // const [initialContent] = useState(() => {
   //   // Retrieve the JSON from localStorage (or undefined if not found)
@@ -95,20 +116,59 @@ const TextEditor = () => {
     // await addNote(JSON.stringify(json));
   }, []);
   return (
-    <>
+    <div style={{ padding: "20px 0" }}>
+      <Input
+        placeholder="Add fun title"
+        size="large"
+        onChange={(e) => setTitle(e.target.value)}
+      />
+
+      <div>
+        <div style={{ position: "relative" }}>
+          <input
+            style={inputStyle}
+            value={selectedEmoji}
+            readOnly
+            onClick={() => setShowDropdown(!showDropdown)}
+          />
+          {showDropdown && (
+            <Row className="custom-dropdown">
+              {emojiOptions.map((option) => (
+                <Col
+                  key={option}
+                  className="emoji-option"
+                  onClick={() => handleSelect(option)}
+                >
+                  <span
+                    style={{
+                      marginRight: "8px",
+                      fontSize: "24px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {option}
+                  </span>
+                  {/* <span>{option.label}</span> */}
+                </Col>
+              ))}
+            </Row>
+          )}
+        </div>
+      </div>
+
+      <MyEditor onChange={handleEditorChange} initialContent={initialContent} />
       <Button
         type="primary"
         size="large"
         onClick={() => {
-          updateNote(currentNoteId);
+          updateNote(currentNoteId, title, selectedEmoji);
           // addNote();
           // call update Note here instead
         }}
       >
         Save to DB
       </Button>
-      <MyEditor onChange={handleEditorChange} initialContent={initialContent} />
-    </>
+    </div>
   );
 };
 

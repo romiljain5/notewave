@@ -1,24 +1,44 @@
-import { React, useEffect, useState, useCallback } from "react";
+import { React, useEffect, useState, useCallback, useRef } from "react";
 import axios from "axios";
-import { Button, Avatar, Divider, List, Skeleton, Modal } from "antd";
+import {
+  Button,
+  Avatar,
+  Divider,
+  List,
+  Skeleton,
+  Modal,
+  Input,
+  AutoComplete,
+  Col,
+  Row,
+} from "antd";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { WysiwygEditor } from "@remirror/react-editors/wysiwyg";
 import { OnChangeJSON } from "@remirror/react";
+import {emojiOptions} from "./EditorUnit";
 
 //use redux to make a variable that sync between MyEditor and AllNotes
 // Make sure to use change value of initial content
-
-
 
 const AllNotes = () => {
   const [idForModal, setIdForModal] = useState("");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  
+  const [title, setTitle] = useState("");
+  const [contentChangeStatus, setTriggeredContentChange] = useState(false);
+
   const [initialContent, setInitialContent] = useState("");
   const [editorKey, setEditorKey] = useState(0);
 
+  // const [selectedEmoji, setSelectedEmoji] = useState("");
+  const [selectedEmoji, setSelectedEmoji] = useState("☘️");
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleSelect = (value) => {
+    setSelectedEmoji(value);
+    setShowDropdown(false);
+  };
 
   useEffect(() => {
     // Whenever idForModal changes, increment the key to trigger a re-render of MyEditor
@@ -27,19 +47,20 @@ const AllNotes = () => {
 
   const MyEditor = ({ onChange, initialContent }) => {
     // useEffect(() => {
-      console.log("initialContent", initialContent);
-      // const editorKey = JSON.stringify(initialContent);
-      return (
-        <div style={{ padding: 16 }}>
-          <WysiwygEditor
-            key={editorKey}
-            placeholder="Enter text..."
-            initialContent={JSON.parse(initialContent)}
-          >
-            <OnChangeJSON onChange={onChange} />
-          </WysiwygEditor>
-        </div>
-      );
+    console.log("initialContent", initialContent);
+    // const editorKey = JSON.stringify(initialContent);
+    return (
+      <div style={{ padding: "16px 0" }}>
+        <WysiwygEditor
+          key={editorKey}
+          placeholder="Enter text..."
+          initialContent={JSON.parse(initialContent)}
+          // autoFocus
+        >
+          <OnChangeJSON onChange={onChange} />
+        </WysiwygEditor>
+      </div>
+    );
     // }, [initialContent]);
   };
 
@@ -68,6 +89,7 @@ const AllNotes = () => {
   };
 
   const modalInstance = async (e, id) => {
+    setTriggeredContentChange(false);
     setIdForModal(id);
     console.log("Current modal instance id", id);
     await getNote(id);
@@ -102,8 +124,10 @@ const AllNotes = () => {
       console.log(JSON.parse(noteData.data.content));
       // console.log(currentNoteId);
       setInitialContent(JSON.parse(noteData.data.content));
+      setTitle(noteData.data.title);
+      setSelectedEmoji(noteData.data.emoji);
 
-      window.localStorage.setItem(idForModal, noteData.data.content);
+      window.localStorage.setItem(currentNoteId, noteData.data.content);
       // console.log(content);
     } catch (error) {
       console.log(error);
@@ -126,14 +150,13 @@ const AllNotes = () => {
     }
   }, [idForModal]);
 
-  const handleEditorChange = useCallback((json) => {
-    // Store the JSON in localstorage
-    // console.log("idForModal", idForModal);
-    // setInitialContent(JSON.stringify(json));
-    window.localStorage.setItem(idForModal, JSON.stringify(json));
-    // setStringContent(JSON.stringify(json));
-    // await addNote(JSON.stringify(json));
-  }, [idForModal]);
+  const handleEditorChange = useCallback(
+    (json) => {
+      window.localStorage.setItem(idForModal, JSON.stringify(json));
+      setTriggeredContentChange(true);
+    },
+    [idForModal]
+  );
 
   useEffect(() => {
     fetchData();
@@ -141,20 +164,26 @@ const AllNotes = () => {
 
   const updateNote = async (id) => {
     try {
+      let updateObject = {
+        title: title,
+        emoji: selectedEmoji
+      };
+      if (contentChangeStatus) {
+        updateObject.content = JSON.stringify(localStorage.getItem(id));
+      }
       const response = await axios.put(
         `http://localhost:8080/update-note?token=${
           import.meta.env.VITE_REACT_APP_TOKEN
         }&id=${id}`,
-        {
-          content: JSON.stringify(localStorage.getItem(id)),
-        },
+        updateObject,
         {
           headers: {
             "Content-Type": "application/json",
           },
         }
       );
-      // await getNote();
+
+      fetchData();
       console.log(response.data);
     } catch (error) {
       console.log(error);
@@ -166,6 +195,21 @@ const AllNotes = () => {
     updateNote(idForModal);
   };
 
+  const handleEmojiSelect = (value) => {
+    console.log(value);
+    setSelectedEmoji(value);
+  };
+
+  const inputStyle = {
+    fontSize: "60px",
+    border: "none",
+    borderBottom: "0px solid #ccc",
+    outline: "none",
+    cursor: "pointer",
+    margin: "20px 0",
+    caretColor: "transparent",
+    width: '10%'
+  };
   // rerender myeditor on change of id
   // useEffect(() => {
   //   MyEditor(handleEditorChange, initialContent);
@@ -174,7 +218,7 @@ const AllNotes = () => {
   return (
     <div>
       <Modal
-        title="Modal 1000px width"
+        title={title}
         centered
         open={open}
         onOk={(e) => saveDataAndCloseModal()}
@@ -182,7 +226,39 @@ const AllNotes = () => {
         width={"80%"}
       >
         {/* Add editor here */}
-        {idForModal}
+        <Input
+          placeholder="Add fun title"
+          size="large"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
+        <div>
+          <div style={{ position: "relative" }}>
+            <input
+              style={inputStyle}
+              value={selectedEmoji}
+              readOnly
+              onClick={() => setShowDropdown(!showDropdown)}
+            />
+            {showDropdown && (
+              <Row className="custom-dropdown">
+                {emojiOptions.map((option) => (
+                  <Col
+                    key={option}
+                    className="emoji-option"
+                    onClick={() => handleSelect(option)}
+                  >
+                    <span style={{ marginRight: "8px", fontSize: "24px", cursor: 'pointer' }}>
+                      {option}
+                    </span>
+                    {/* <span>{option.label}</span> */}
+                  </Col>
+                ))}
+              </Row>
+            )}
+          </div>
+        </div>
 
         <MyEditor
           onChange={handleEditorChange}
@@ -223,11 +299,12 @@ const AllNotes = () => {
           <List
             dataSource={data}
             renderItem={(item) => (
-              <List.Item key={item._id}>
+              <List.Item key={item._id} >
                 <List.Item.Meta
+                  style={{fontSize:"40px"}}
                   avatar={item.emoji}
-                  title={<a href="https://ant.design">{item.title}</a>}
-                  description={item.content}
+                  title={<a style={{fontSize:'20px'}}>{item.title}</a>}
+                  description={JSON.parse(item.content)}
                 />
                 <div>
                   <Button
