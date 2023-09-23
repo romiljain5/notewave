@@ -5,47 +5,23 @@ import axios from "axios";
 import { Button, Input, Row, Col } from "antd";
 import { useSelector } from "react-redux";
 import {emojiOptions} from "./EditorUnit";
+import { updateNote, getNote } from "./EditorUnit";
 
 const STORAGE_KEY = "remirror-editor-content";
 
-const getNote = async (currentNoteId) => {
-  try {
-    console.log("currentNoteId", currentNoteId);
-    const noteData = await axios.get(
-      `http://localhost:8080/get-note?token=${
-        import.meta.env.VITE_REACT_APP_TOKEN
-      }&id=${currentNoteId}`
-    );
-
-    console.log(noteData.data);
+const getLatestNote = async (currentNoteId) => {
+    const noteData = await getNote(currentNoteId);
     return JSON.stringify(noteData.data.content);
-  } catch (error) {
-    console.log(error);
-    return JSON.stringify({ message: error.message });
-  }
 };
 
-const updateNote = async (id, title, emoji) => {
-  try {
-    const response = await axios.put(
-      `http://localhost:8080/update-note?token=${
-        import.meta.env.VITE_REACT_APP_TOKEN
-      }&id=${id}`,
-      {
-        content: JSON.stringify(localStorage.getItem(STORAGE_KEY)),
-        title: title,
-        emoji: emoji
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    console.log(response.data);
-  } catch (error) {
-    console.log(error);
+const updateNoteObject = async (id, title, emoji) => {
+  const updateObject = {
+    content: JSON.stringify(localStorage.getItem(STORAGE_KEY)),
+    title: title,
+    emoji: emoji
   }
+  await updateNote(id, updateObject);
+  
 };
 
 const MyEditor = ({ onChange, initialContent }) => {
@@ -83,7 +59,7 @@ const TextEditor = () => {
 
   const fetchData = async () => {
     try {
-      const content = await getNote(currentNoteId);
+      const content = await getLatestNote(currentNoteId);
       return content ? JSON.parse(content) : undefined;
     } catch (error) {
       console.error(error);
@@ -101,13 +77,6 @@ const TextEditor = () => {
     setSelectedEmoji(value);
     setShowDropdown(false);
   };
-
-  // const [initialContent] = useState(() => {
-  //   // Retrieve the JSON from localStorage (or undefined if not found)
-  //   const content = getNote();
-  //   // const content = window.localStorage.getItem(STORAGE_KEY);
-  //   return content ? JSON.parse(content) : undefined;
-  // });
 
   const handleEditorChange = useCallback(async (json) => {
     // Store the JSON in localstorage
@@ -132,12 +101,12 @@ const TextEditor = () => {
             onClick={() => setShowDropdown(!showDropdown)}
           />
           {showDropdown && (
-            <Row className="custom-dropdown">
+            <Row className="custom-dropdown" style={{height: "150px", width:"400px", overflow: 'scroll'}}>
               {emojiOptions.map((option) => (
                 <Col
-                  key={option}
+                  key={option.key}
                   className="emoji-option"
-                  onClick={() => handleSelect(option)}
+                  onClick={() => handleSelect(option.emoji)}
                 >
                   <span
                     style={{
@@ -146,7 +115,7 @@ const TextEditor = () => {
                       cursor: "pointer",
                     }}
                   >
-                    {option}
+                    {option.emoji}
                   </span>
                   {/* <span>{option.label}</span> */}
                 </Col>
@@ -161,7 +130,7 @@ const TextEditor = () => {
         type="primary"
         size="large"
         onClick={() => {
-          updateNote(currentNoteId, title, selectedEmoji);
+          updateNoteObject(currentNoteId, title, selectedEmoji);
           // addNote();
           // call update Note here instead
         }}

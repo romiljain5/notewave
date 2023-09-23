@@ -15,7 +15,8 @@ import {
 import InfiniteScroll from "react-infinite-scroll-component";
 import { WysiwygEditor } from "@remirror/react-editors/wysiwyg";
 import { OnChangeJSON } from "@remirror/react";
-import {emojiOptions} from "./EditorUnit";
+import { emojiOptions, deleteNote, updateNote, getNote } from "./EditorUnit";
+
 
 //use redux to make a variable that sync between MyEditor and AllNotes
 // Make sure to use change value of initial content
@@ -46,9 +47,6 @@ const AllNotes = () => {
   }, [idForModal]);
 
   const MyEditor = ({ onChange, initialContent }) => {
-    // useEffect(() => {
-    console.log("initialContent", initialContent);
-    // const editorKey = JSON.stringify(initialContent);
     return (
       <div style={{ padding: "16px 0" }}>
         <WysiwygEditor
@@ -61,7 +59,6 @@ const AllNotes = () => {
         </WysiwygEditor>
       </div>
     );
-    // }, [initialContent]);
   };
 
   const fetchData = async () => {
@@ -78,9 +75,7 @@ const AllNotes = () => {
       );
       setData(response.data);
 
-      // setData([...response.data]);
       setLoading(false);
-      // console.log(JSON.parse(response.data[response.data.length - 1].content));
       console.log(response.data);
     } catch (error) {
       console.log(error);
@@ -92,46 +87,29 @@ const AllNotes = () => {
     setTriggeredContentChange(false);
     setIdForModal(id);
     console.log("Current modal instance id", id);
-    await getNote(id);
+    await getNoteAndUpdateStates(id);
     setOpen(true);
   };
 
-  const deleteNote = async (e, note) => {
-    console.log("deleteNote", note);
-    try {
-      const dataForDeleteNote = await axios.delete(
-        `http://localhost:8080/delete-note?token=${
-          import.meta.env.VITE_REACT_APP_TOKEN
-        }&id=${note._id}`
-      );
-      console.log(dataForDeleteNote);
+  const deleteNoteAndFetchNote = async (e, note) => {
+    const deleteStatus = await deleteNote(note);
+    if (deleteStatus.status === "success") {
       fetchData();
-    } catch (error) {
-      console.log("deleteTask", error);
     }
   };
 
-  const getNote = async (currentNoteId) => {
-    try {
-      console.log("currentNoteId", currentNoteId);
-      const noteData = await axios.get(
-        `http://localhost:8080/get-note?token=${
-          import.meta.env.VITE_REACT_APP_TOKEN
-        }&id=${currentNoteId}`
-      );
+  const getNoteAndUpdateStates = async (currentNoteId) => {
+    const noteData = await getNote(currentNoteId);
 
-      setIdForModal(currentNoteId);
-      console.log(JSON.parse(noteData.data.content));
-      // console.log(currentNoteId);
-      setInitialContent(JSON.parse(noteData.data.content));
-      setTitle(noteData.data.title);
-      setSelectedEmoji(noteData.data.emoji);
+    setIdForModal(currentNoteId);
+    console.log(JSON.parse(noteData.data.content));
+    // console.log(currentNoteId);
+    setInitialContent(JSON.parse(noteData.data.content));
+    setTitle(noteData.data.title);
+    setSelectedEmoji(noteData.data.emoji);
 
-      window.localStorage.setItem(currentNoteId, noteData.data.content);
-      // console.log(content);
-    } catch (error) {
-      console.log(error);
-    }
+    window.localStorage.setItem(currentNoteId, noteData.data.content);
+    // console.log(content);
   };
 
   useEffect(() => {
@@ -162,42 +140,24 @@ const AllNotes = () => {
     fetchData();
   }, []);
 
-  const updateNote = async (id) => {
-    try {
-      let updateObject = {
-        title: title,
-        emoji: selectedEmoji
-      };
-      if (contentChangeStatus) {
-        updateObject.content = JSON.stringify(localStorage.getItem(id));
-      }
-      const response = await axios.put(
-        `http://localhost:8080/update-note?token=${
-          import.meta.env.VITE_REACT_APP_TOKEN
-        }&id=${id}`,
-        updateObject,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+  const updateNoteObject = async (id) => {
+    let updateObject = {
+      title: title,
+      emoji: selectedEmoji,
+    };
+    if (contentChangeStatus) {
+      updateObject.content = JSON.stringify(localStorage.getItem(id));
+    }
+    const updateStatus = await updateNote(id, updateObject);
 
+    if (updateStatus.status === "success") {
       fetchData();
-      console.log(response.data);
-    } catch (error) {
-      console.log(error);
     }
   };
 
   const saveDataAndCloseModal = () => {
     setOpen(false);
-    updateNote(idForModal);
-  };
-
-  const handleEmojiSelect = (value) => {
-    console.log(value);
-    setSelectedEmoji(value);
+    updateNoteObject(idForModal);
   };
 
   const inputStyle = {
@@ -208,7 +168,7 @@ const AllNotes = () => {
     cursor: "pointer",
     margin: "20px 0",
     caretColor: "transparent",
-    width: '10%'
+    width: "10%",
   };
   // rerender myeditor on change of id
   // useEffect(() => {
@@ -245,12 +205,18 @@ const AllNotes = () => {
               <Row className="custom-dropdown">
                 {emojiOptions.map((option) => (
                   <Col
-                    key={option}
+                    key={option.key}
                     className="emoji-option"
                     onClick={() => handleSelect(option)}
                   >
-                    <span style={{ marginRight: "8px", fontSize: "24px", cursor: 'pointer' }}>
-                      {option}
+                    <span
+                      style={{
+                        marginRight: "8px",
+                        fontSize: "24px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {option.emoji}
                     </span>
                     {/* <span>{option.label}</span> */}
                   </Col>
@@ -265,12 +231,21 @@ const AllNotes = () => {
           initialContent={initialContent}
         />
       </Modal>
-      All Notes Should Render here from MongoDB
-      <Button onClick={fetchData} type="primary">
-        Refresh
-      </Button>
+      <Row>
+        <Col span={20} style={{margin: '20px 0', fontSize: "20px"}}>All Notes Should Render here from MongoDB</Col>
+        <Col span={4} style={{textAlign: "right"}}>
+          <Button
+            onClick={fetchData}
+            type="primary"
+            size="large"
+            style={{ margin: "16px 0"}}
+            loading={loading}
+          >
+            Refresh
+          </Button>
+        </Col>
+      </Row>
       <br />
-      {/* <Button onClick={getData}>Fetch</Button> */}
       <div
         id="scrollableDiv"
         style={{
@@ -299,22 +274,28 @@ const AllNotes = () => {
           <List
             dataSource={data}
             renderItem={(item) => (
-              <List.Item key={item._id} >
+              <List.Item key={item._id}>
                 <List.Item.Meta
-                  style={{fontSize:"40px"}}
+                  style={{ fontSize: "40px" }}
                   avatar={item.emoji}
-                  title={<a style={{fontSize:'20px'}}>{item.title}</a>}
-                  description={JSON.parse(item.content)}
+                  title={<a style={{ fontSize: "20px" }}>{item.title}</a>}
+                  description={
+                    item.content === "" ? "" : JSON.parse(item.content)
+                  }
                 />
                 <div>
                   <Button
                     type="primary"
                     onClick={(e) => modalInstance(e, item._id)}
-                    style={{ marginRight: "10px" }}
+                    style={{ marginRight: "10px", backgroundColor: "black" }}
                   >
                     Edit
                   </Button>
-                  <Button danger onClick={(e) => deleteNote(e, item)}>
+                  <Button
+                    danger
+                    onClick={(e) => deleteNoteAndFetchNote(e, item)}
+                    style={{ borderColor: "black", color: "black" }}
+                  >
                     Delete
                   </Button>
                 </div>
