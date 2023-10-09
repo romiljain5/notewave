@@ -28,12 +28,14 @@ import { useDispatch } from "react-redux";
 import { currentNoteId } from "../features/note/noteSlice";
 import { v4 as uuidv4 } from 'uuid';
 import axios from "axios";
+import Reditor from "./Reditor";
 
 const MenuItem = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showEditor, setShowEditor] = useState(true);
+  const [showEditor, setShowEditor] = useState(false);
   const [showAllNotes, setShowAllNotes] = useState(false);
   const [showTasks, setShowTasks] = useState(false);
+  const [showReditor, setShowReditor] = useState(true);
   const showModal = () => {
     setIsModalOpen(true);
   };
@@ -96,6 +98,7 @@ const MenuItem = () => {
         getItem("Tasks", "17", <CheckSquareOutlined />),
         getItem("Favorites", "18", <HeartOutlined />),
         getItem("Settings", "19", <SettingOutlined />),
+        getItem("Add Remirror Note", "20", <FileTextOutlined />),
       ],
       "group"
     ),
@@ -114,23 +117,6 @@ const MenuItem = () => {
         [getItem("Option 3", "3"), getItem("Option 4", "4")],
         "group"
       ),
-    ]),
-    getItem("Navigation Two", "sub2", <AppstoreOutlined />, [
-      getItem("Option 5", "5"),
-      getItem("Option 6", "6"),
-      getItem("Submenu", "sub3", null, [
-        getItem("Option 7", "7"),
-        getItem("Option 8", "8"),
-      ]),
-    ]),
-    {
-      type: "divider",
-    },
-    getItem("Navigation Three", "sub4", <SettingOutlined />, [
-      getItem("Option 9", "9"),
-      getItem("Option 10", "10"),
-      getItem("Option 11", "11"),
-      getItem("Option 12", "12"),
     ]),
   ];
 
@@ -158,6 +144,11 @@ const MenuItem = () => {
         setShowAllNotes(false);
         setShowEditor(false);
         break;
+      case "20":
+        setShowReditor(true);
+        setShowTasks(false);
+        setShowAllNotes(false);
+        setShowEditor(false);
       default:
         break;
     }
@@ -172,7 +163,7 @@ const MenuItem = () => {
             style={{
               width: 256,
             }}
-            defaultSelectedKeys={["14"]}
+            defaultSelectedKeys={["20"]}
             defaultOpenKeys={["sub1"]}
             mode="inline"
             items={items}
@@ -199,6 +190,7 @@ const MenuItem = () => {
             </>
           )}
           {showTasks && <Tasks />}
+          {showReditor && <Reditor />}
         </Col>
       </Row>
     </div>
